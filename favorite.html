@@ -337,12 +337,6 @@
 
             // 3. 重新渲染畫面 (比較簡單粗暴的方法)
             renderFavorites();
-            
-            // 如果你想要只刪除該行而不重整，可以改成這樣：
-            // const row = event.currentTarget.closest('.song-item');
-            // row.style.opacity = '0';
-            // setTimeout(() => row.remove(), 300);
-            // 但需要另外處理「全部刪光後顯示空訊息」的邏輯，所以直接呼叫 renderFavorites 最穩。
         }
 
         function playSong(song) {
@@ -361,7 +355,11 @@
             if (song.mp3) {
                 mp3Section.style.display = "flex";
                 audioPlayer.style.display = "block";
-                audioPlayer.src = song.mp3;
+                
+                // ★★★ 修改路徑邏輯 (同步更新) ★★★
+                // 自動去掉 "MP3/"，改為直接讀取根目錄下的檔案
+                audioPlayer.src = song.mp3.replace('MP3/', '');
+                
                 audioPlayer.play();
                 isAutoPlaying = true;
                 lyricsBox.textContent = song.lyrics || "（歌詞準備中...）";
