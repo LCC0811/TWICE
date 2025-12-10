@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的最愛 One in a Million</title>
+    <link rel="icon" href="Logo_of_TWICE.png" type="image/svg+xml">
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --card-bg: #181818;
+            --text-main: #ffffff;
+            --text-sub: #b3b3b3;
+            --accent: #ff7eb3;
+            --accent-hover: #ff5fa2;
+            --fav-color: #ff4757;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- 頂部導航 --- */
+        .nav-container {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #333; /* 在白底上用深色字 */
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .main-logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            background-color: #333;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .back-btn:hover {
+            background-color: #555;
+            transform: scale(1.05);
+        }
+
+        /* --- 播放器 (與主頁相同) --- */
+        .player-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .player-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .player-content {
+            display: flex;
+            gap: 25px;
+            align-items: flex-start;
+        }
+        .video-section { flex: 1.2; min-width: 0; }
+        .audio-section { flex: 0.8; display: flex; flex-direction: column; }
+        
+        @media (max-width: 768px) {
+            .player-content { flex-direction: column; }
+            .video-section, .audio-section { width: 100%; flex: none; }
+            .page-title { font-size: 20px; }
+            .main-logo { height: 40px; }
+        }
+
+        iframe {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border: none;
+            border-radius: 8px;
+            background: #000;
+        }
+        audio { width: 100%; margin-bottom: 10px; outline: none; }
+        .lyrics-box {
+            flex-grow: 1;
+            height: 300px;
+            overflow-y: auto;
+            background-color: #222;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-line;
+            line-height: 1.7;
+            color: var(--text-sub);
+            border: 1px solid #333;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        .lyrics-box::-webkit-scrollbar { width: 8px; }
+        .lyrics-box::-webkit-scrollbar-thumb { background-color: #555; border-radius: 4px; }
+
+        /* --- 列表區域 --- */
+        .results-list {
+            width: 100%;
+            max-width: 800px;
+            list-style: none;
+            padding: 0;
+        }
+        .song-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 加入動畫讓移除時比較順 */
+        }
+        .song-item:hover { background-color: #282828; }
+        
+        .song-img {
+            width: 50px;
+            height: 50px;
+            background-color: #333;
+            border-radius: 4px;
+            margin-right: 15px;
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #777;
+        }
+        .song-details { flex-grow: 1; }
+        .song-title { font-weight: bold; display: block; }
+        .song-artist { font-size: 0.9em; color: var(--text-sub); }
+        .song-duration { font-size: 0.8em; color: var(--text-sub); margin-right: 15px; }
+
+        /* 移除按鈕 (也是愛心，但預設是實心的) */
+        .remove-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--fav-color);
+            font-size: 24px;
+            transition: transform 0.2s, color 0.2s;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .remove-btn:hover {
+            transform: scale(1.1);
+            color: #777; /* hover 時變灰色，暗示移除 */
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #555;
+            margin-top: 50px;
+            font-size: 1.2rem;
+        }
+        .section-label {
+            font-size: 0.8rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-container">
+        <h1 class="page-title">
+            <img src="Logo_of_TWICE.png" alt="Logo" class="main-logo">
+            我的最愛
+        </h1>
+        <a href="index.html" class="back-btn">
+            ↩ 回首頁
+        </a>
+    </div>
+
+    <div class="player-container" id="musicPlayer">
+        <div class="player-header">
+            <h2 id="currentTitle" style="margin: 0 0 5px 0;">-</h2>
+            <p id="currentArtist" style="color: #bbb; margin: 0;">-</p>
+        </div>
+
+        <div class="player-content">
+            <div class="video-section" id="ytSection" style="display:none;">
+                <div class="section-label">Music Video</div>
+                <iframe id="ytPlayer" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+
+            <div class="audio-section" id="mp3Section" style="display:none;">
+                <div class="section-label">Audio & Lyrics</div>
+                <audio id="audioPlayer" controls>您的瀏覽器不支援 audio 元素。</audio>
+                <div id="lyricsBox" class="lyrics-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="results-list" id="resultsList">
+        <div class="empty-message">正在載入收藏清單...</div>
+    </ul>
+
+    <script>
+        let allMusicData = [];
+        // 讀取最愛清單
+        let favorites = JSON.parse(localStorage.getItem('twice_favorites')) || [];
+
+        const resultsList = document.getElementById('resultsList');
+        const musicPlayer = document.getElementById('musicPlayer');
+        const currentTitle = document.getElementById('currentTitle');
+        const currentArtist = document.getElementById('currentArtist');
+        const ytSection = document.getElementById('ytSection');
+        const ytPlayer = document.getElementById('ytPlayer');
+        const mp3Section = document.getElementById('mp3Section');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const lyricsBox = document.getElementById('lyricsBox');
+
+        fetch('music_data.json')
+            .then(response => {
+                if (!response.ok) throw new Error("找不到 music_data.json");
+                return response.json();
+            })
+            .then(data => {
+                allMusicData = data;
+                renderFavorites(); // 資料讀取完後，開始渲染
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultsList.innerHTML = `<div class="empty-message">讀取資料失敗，請確認 music_data.json 存在。</div>`;
+            });
+
+        function getEmbedUrl(url) {
+            if (!url) return "";
+            let videoId = "";
+            if (url.includes("youtu.be/")) {
+                videoId = url.split("youtu.be/")[1].split("?")[0];
+            } else if (url.includes("watch?v=")) {
+                videoId = url.split("watch?v=")[1].split("&")[0];
+            }
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+        }
+
+        function renderFavorites() {
+            resultsList.innerHTML = "";
+            
+            // 重新讀取一次最愛 (保險起見)
+            favorites = JSON.parse(localStorage.getItem('twice_favorites')) || [];
+
+            if (favorites.length === 0) {
+                resultsList.innerHTML = `
+                    <div class="empty-message">
+                        你還沒有加入任何最愛歌曲哦！<br>
+                        <a href="index.html" style="color:var(--accent); font-size:0.9em;">去首頁找歌</a>
+                    </div>`;
+                return;
+            }
+
+            // 篩選出在最愛清單裡的歌
+            const favoriteSongs = allMusicData.filter(song => favorites.includes(song.title));
+
+            favoriteSongs.forEach(song => {
+                const li = document.createElement('li');
+                li.className = 'song-item';
+                li.id = `song-${song.title.replace(/\s+/g, '-')}`; // 給每個項目一個 ID 以便移除時操作
+
+                const imgHTML = song.cover ? 
+                    `<img src="${song.cover}" class="song-img">` : 
+                    `<div class="song-img">TWICE</div>`;
+
+                li.innerHTML = `
+                    ${imgHTML}
+                    <div class="song-details">
+                        <span class="song-title">${song.title}</span>
+                        <span class="song-artist">${song.artist}</span>
+                    </div>
+                    <span class="song-duration">${song.duration}</span>
+                    
+                    <button class="remove-btn" title="從最愛移除" onclick="removeFavorite(event, '${song.title.replace(/'/g, "\\'")}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    </button>
+                `;
+
+                li.addEventListener('click', () => {
+                    playSong(song);
+                });
+
+                resultsList.appendChild(li);
+            });
+        }
+
+        // 移除最愛功能
+        window.removeFavorite = function(event, songTitle) {
+            event.stopPropagation(); // 阻止播放
+            
+            // 1. 確認是否真的要移除 (可選，這裡直接移除體驗比較流暢)
+            // if(!confirm("確定要將這首歌移除最愛嗎？")) return;
+
+            // 2. 更新資料
+            favorites = favorites.filter(t => t !== songTitle);
+            localStorage.setItem('twice_favorites', JSON.stringify(favorites));
+
+            // 3. 重新渲染畫面 (比較簡單粗暴的方法)
+            renderFavorites();
+            
+            // 如果你想要只刪除該行而不重整，可以改成這樣：
+            // const row = event.currentTarget.closest('.song-item');
+            // row.style.opacity = '0';
+            // setTimeout(() => row.remove(), 300);
+            // 但需要另外處理「全部刪光後顯示空訊息」的邏輯，所以直接呼叫 renderFavorites 最穩。
+        }
+
+        function playSong(song) {
+            musicPlayer.style.display = 'block';
+            currentTitle.textContent = song.title;
+            currentArtist.textContent = song.artist;
+            
+            ytPlayer.src = "";
+            ytSection.style.display = "none";
+            audioPlayer.pause();
+            audioPlayer.src = "";
+            mp3Section.style.display = "none";
+            
+            let isAutoPlaying = false;
+
+            if (song.mp3) {
+                mp3Section.style.display = "flex";
+                audioPlayer.style.display = "block";
+                audioPlayer.src = song.mp3;
+                audioPlayer.play();
+                isAutoPlaying = true;
+                lyricsBox.textContent = song.lyrics || "（歌詞準備中...）";
+            }
+
+            if (song.url) {
+                ytSection.style.display = "block";
+                const autoPlayState = isAutoPlaying ? "0" : "1";
+                ytPlayer.src = `${getEmbedUrl(song.url)}?autoplay=${autoPlayState}`;
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
