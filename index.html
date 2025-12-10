@@ -424,7 +424,11 @@
             if (song.mp3) {
                 mp3Section.style.display = "flex"; 
                 audioPlayer.style.display = "block";
-                audioPlayer.src = song.mp3;
+                
+                // ★★★ 修改路徑邏輯 ★★★
+                // 自動去掉 "MP3/"，改為直接讀取根目錄下的檔案
+                audioPlayer.src = song.mp3.replace('MP3/', '');
+                
                 audioPlayer.play();
                 isAutoPlaying = true;
                 lyricsBox.textContent = song.lyrics || "（歌詞準備中...）";
